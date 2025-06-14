@@ -30,10 +30,26 @@
       margin-top: 10px;
     }
 
-    .bill-info input {
-      width: 140px;
-      padding: 4px;
+    .bill-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
     }
+
+    .bill-info p {
+      margin: 0;
+    }
+
+  .bill-info input {
+  width: 140px;
+  height: 20px;
+  padding: 4px;
+  display: block;
+  border: 2px solid #000; /* Thick dark border */
+  outline: none;           /* Remove default outline */
+  font-weight: bold;       /* Optional: make text bold for clarity */
+}
 
     .invoice-table {
       width: 100%;
@@ -51,20 +67,28 @@
       background: #eee;
     }
 
+    .amounts p {
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
+      color: #333;
+      line-height: 1.2;
+      gap: 5px;
+    }
+
     .amounts {
       margin-top: 20px;
-      width: 50%;
+      width: 30%;
       margin-left: auto;
       border: 1px solid #000;
       padding: 10px;
     }
 
-    .amounts p { margin: 4px 0; }
-
-    .footer {
-      margin-top: 40px;
-      text-align: right;
-    }
+   .footer {
+  margin-top: 40px;
+  text-align: right;
+  line-height: 2; /* This adds vertical spacing between lines */
+}
 
     .print-btn, .add-row-btn, .delete-btn {
       margin-top: 20px;
@@ -83,7 +107,6 @@
       margin: 0;
     }
 
-    /* ✅ Hide Delete column completely when printing */
     @media print {
       .print-btn, .add-row-btn, .delete-btn,
       .invoice-table th:nth-child(8),
@@ -96,12 +119,12 @@
 <body>
 
 <div class="invoice-container">
-  <h2 class="center">BILL CASH MEMO</h2>
+  <h4 class="center">INVOICE</h4>
   <h1 class="center bold">M/S TRIMURTI ENTERPRISES</h1>
   <p class="small">
-    Deal in :- civil work, house keeping, painting, pest control, furniture & etc<br>
-    Village - Sehrala, PO - Dhatir, Tehsil - Prithla, Dist - Palwal, Haryana - 121102<br>
-    Mob: 09958161487, 09871064173 | Email: trimurti.piyala@gmail.com<br>
+    Deal in: Civil work, housekeeping, painting, pest control, furniture, etc.<br>
+    Village: Sehrala, P.O.: Dhatir, Tehsil: Prithla, District: Palwal, Haryana – 121102<br>
+    Mobile: 09958161487, 09871064173 | Email: trimurti.piyala@gmail.com<br>
     GST NO: 06CFIPS2710E1ZO
   </p>
 
@@ -112,17 +135,18 @@
       <p>Vill. Piyala, PO Asaoti, Teh. Ballabgarh, Faridabad - 121004</p>
       <p>GST: 06AACB2902M1ZX</p>
       <p>Vendor Code: 322898</p>
+      <p>PO NO:</p>
     </div>
     <div class="bill-info">
       <p><strong>BILL NO:</strong> <input type="text" /></p>
-      <p><strong>DATE:</strong> <input type="date" /></p>
+      <p><strong>DATE:</strong> <input type="text" /></p>
     </div>
   </div>
 
   <table class="invoice-table">
     <thead>
       <tr>
-        <th>Sr. No.</th>
+        <th style="width: 40px;">Sr. No.</th>
         <th>Item Detail</th>
         <th>HSN / SAC</th>
         <th>Qty</th>
@@ -159,7 +183,7 @@
   <p><strong>Amount (in words):</strong> <span id="in-words">Zero Rupees Only</span></p>
 
   <div class="footer">
-    <p>FOR Trimurti ENTERPRISES</p>
+    <p>FOR TRIMURTI ENTERPRISES</p>
     <p>Auth Signatory</p>
   </div>
 
@@ -190,7 +214,31 @@
     const finalTotal = total + cgst + sgst;
     document.getElementById("total").innerText = finalTotal.toFixed(2);
 
-    document.getElementById("in-words").innerText = numToWords(Math.round(finalTotal)) + " Rupees Only";
+    document.getElementById("in-words").innerText = numberToWords(finalTotal);
+  }
+
+  function numberToWords(amount) {
+    const [rupees, paise] = amount.toFixed(2).split('.');
+    const words = (n) => {
+      const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+        "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+        "Seventeen", "Eighteen", "Nineteen"];
+      const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      const num = parseInt(n, 10);
+      if (num === 0) return "Zero";
+      if (num < 20) return a[num];
+      if (num < 100) return b[Math.floor(num / 10)] + (num % 10 ? " " + a[num % 10] : "");
+      if (num < 1000) return a[Math.floor(num / 100)] + " Hundred " + (num % 100 !== 0 ? "and " + words(num % 100) : "");
+      if (num < 100000) return words(Math.floor(num / 1000)) + " Thousand " + words(num % 1000);
+      if (num < 10000000) return words(Math.floor(num / 100000)) + " Lakh " + words(num % 100000);
+      return words(Math.floor(num / 10000000)) + " Crore " + words(num % 10000000);
+    };
+
+    let result = words(rupees) + " Rupees";
+    if (parseInt(paise) > 0) {
+      result += " and " + words(paise) + " Paise";
+    }
+    return result + " Only";
   }
 
   function addRow() {
@@ -198,7 +246,7 @@
     const rowCount = tbody.rows.length + 1;
     const newRow = document.createElement("tr");
     newRow.innerHTML = `
-      <td>${rowCount}</td>
+      <td style="width: 40px;">${rowCount}</td>
       <td contenteditable="true"></td>
       <td contenteditable="true"></td>
       <td contenteditable="true" class="qty"></td>
@@ -226,23 +274,6 @@
 
   document.addEventListener("input", calculate);
   window.onload = calculate;
-
-  function numToWords(num) {
-    const a = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
-      "Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
-    const b = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
-    if ((num = num.toString()).length > 9) return "Overflow";
-    let n = ("000000000" + num).substr(-9).match(/.{1,2}/g);
-    let str = "";
-    str += (n[0] != 0) ? (a[Number(n[0])] || b[n[0][0]] + " " + a[n[0][1]]) + "Crore " : "";
-    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + "Lakh " : "";
-    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + "Thousand " : "";
-    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + "Hundred " : "";
-    str += (n[4] != 0) ? ((str != "") ? "and " : "") +
-      (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) : "";
-    return str.trim();
-  }
 </script>
-
 </body>
 </html>
