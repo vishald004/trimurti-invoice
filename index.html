@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trimurti Invoice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+
+    .invoice-container {
+      width: 210mm;
+      background: #fff;
+      padding: 30px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+    .small { font-size: 0.9rem; text-align: center; }
+
+    .top-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .bill-info input {
+      width: 140px;
+      padding: 4px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .invoice-table th, .invoice-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .invoice-table th {
+      background: #eee;
+    }
+
+    .amounts {
+      margin-top: 20px;
+      width: 50%;
+      margin-left: auto;
+      border: 1px solid #000;
+      padding: 10px;
+    }
+
+    .amounts p { margin: 4px 0; }
+
+    .footer {
+      margin-top: 40px;
+      text-align: right;
+    }
+
+    .print-btn, .add-row-btn, .delete-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      padding: 4px 10px;
+      background: red;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ✅ Hide Delete column completely when printing */
+    @media print {
+      .print-btn, .add-row-btn, .delete-btn,
+      .invoice-table th:nth-child(8),
+      .invoice-table td:nth-child(8) {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="invoice-container">
+  <h2 class="center">BILL CASH MEMO</h2>
+  <h1 class="center bold">M/S TRIMURTI ENTERPRISES</h1>
+  <p class="small">
+    Deal in :- civil work, house keeping, painting, pest control, furniture & etc<br>
+    Village - Sehrala, PO - Dhatir, Tehsil - Prithla, Dist - Palwal, Haryana - 121102<br>
+    Mob: 09958161487, 09871064173 | Email: trimurti.piyala@gmail.com<br>
+    GST NO: 06CFIPS2710E1ZO
+  </p>
+
+  <div class="top-details">
+    <div>
+      <p><strong>Bharat Petroleum Corp. Ltd.</strong></p>
+      <p>Piyala LPG Bottling Plant / DEPO</p>
+      <p>Vill. Piyala, PO Asaoti, Teh. Ballabgarh, Faridabad - 121004</p>
+      <p>GST: 06AACB2902M1ZX</p>
+      <p>Vendor Code: 322898</p>
+    </div>
+    <div class="bill-info">
+      <p><strong>BILL NO:</strong> <input type="text" /></p>
+      <p><strong>DATE:</strong> <input type="date" /></p>
+    </div>
+  </div>
+
+  <table class="invoice-table">
+    <thead>
+      <tr>
+        <th>Sr. No.</th>
+        <th>Item Detail</th>
+        <th>HSN / SAC</th>
+        <th>Qty</th>
+        <th>Unit</th>
+        <th>Rate</th>
+        <th>Amount</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody id="item-rows">
+      <tr>
+        <td>1</td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true" class="qty"></td>
+        <td contenteditable="true"></td>
+        <td contenteditable="true" class="rate"></td>
+        <td class="amount"></td>
+        <td><button class="delete-btn" onclick="deleteRow(this)">🗑️</button></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button class="add-row-btn" onclick="addRow()">➕ Add Row</button>
+
+  <div class="amounts">
+    <p>AMT.: <span id="amt">0.00</span></p>
+    <p>CGST 9%: <span id="cgst">0.00</span></p>
+    <p>SGST 9%: <span id="sgst">0.00</span></p>
+    <p>IGST %: <span id="igst">0.00</span></p>
+    <p class="bold">TOTAL AMT.: <span id="total">0.00</span></p>
+  </div>
+
+  <p><strong>Amount (in words):</strong> <span id="in-words">Zero Rupees Only</span></p>
+
+  <div class="footer">
+    <p>FOR Trimurti ENTERPRISES</p>
+    <p>Auth Signatory</p>
+  </div>
+
+  <button onclick="window.print()" class="print-btn">🖨️ Print Invoice</button>
+</div>
+
+<script>
+  function calculate() {
+    const rows = document.querySelectorAll("#item-rows tr");
+    let total = 0;
+
+    rows.forEach(row => {
+      const qty = parseFloat(row.querySelector(".qty")?.innerText) || 0;
+      const rate = parseFloat(row.querySelector(".rate")?.innerText) || 0;
+      const amt = qty * rate;
+      row.querySelector(".amount").innerText = amt.toFixed(2);
+      total += amt;
+    });
+
+    document.getElementById("amt").innerText = total.toFixed(2);
+
+    const cgst = total * 0.09;
+    const sgst = total * 0.09;
+
+    document.getElementById("cgst").innerText = cgst.toFixed(2);
+    document.getElementById("sgst").innerText = sgst.toFixed(2);
+
+    const finalTotal = total + cgst + sgst;
+    document.getElementById("total").innerText = finalTotal.toFixed(2);
+
+    document.getElementById("in-words").innerText = numToWords(Math.round(finalTotal)) + " Rupees Only";
+  }
+
+  function addRow() {
+    const tbody = document.getElementById("item-rows");
+    const rowCount = tbody.rows.length + 1;
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+      <td>${rowCount}</td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true" class="qty"></td>
+      <td contenteditable="true"></td>
+      <td contenteditable="true" class="rate"></td>
+      <td class="amount"></td>
+      <td><button class="delete-btn" onclick="deleteRow(this)">🗑️</button></td>
+    `;
+    tbody.appendChild(newRow);
+  }
+
+  function deleteRow(btn) {
+    const row = btn.closest("tr");
+    row.remove();
+    renumberRows();
+    calculate();
+  }
+
+  function renumberRows() {
+    const rows = document.querySelectorAll("#item-rows tr");
+    rows.forEach((row, index) => {
+      row.querySelector("td").innerText = index + 1;
+    });
+  }
+
+  document.addEventListener("input", calculate);
+  window.onload = calculate;
+
+  function numToWords(num) {
+    const a = ["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
+      "Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+    const b = ["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+    if ((num = num.toString()).length > 9) return "Overflow";
+    let n = ("000000000" + num).substr(-9).match(/.{1,2}/g);
+    let str = "";
+    str += (n[0] != 0) ? (a[Number(n[0])] || b[n[0][0]] + " " + a[n[0][1]]) + "Crore " : "";
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + "Lakh " : "";
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + "Thousand " : "";
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + "Hundred " : "";
+    str += (n[4] != 0) ? ((str != "") ? "and " : "") +
+      (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) : "";
+    return str.trim();
+  }
+</script>
+
+</body>
+</html>
